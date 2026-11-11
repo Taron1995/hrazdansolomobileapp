@@ -1,0 +1,40 @@
+@page
+@model UGeekStore.Pages.Orders.IndexModel
+@{ ViewData["Title"] = "Պատվերներ"; }
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h4 mb-0">Պատվերներ</h1>
+    @if (User.IsAny(Roles.CashDesk)) { <a class="btn btn-brand" href="/Orders/Create">+ Նոր պատվեր</a> }
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-6 col-md-2">
+        <select name="scope" class="form-select" onchange="this.form.submit()">
+            <option value="today" selected="@(Model.Scope == "today")">Այսօր</option>
+            <option value="tomorrow" selected="@(Model.Scope == "tomorrow")">Վաղը</option>
+            <option value="open" selected="@(Model.Scope == "open")">Բոլոր բաց</option>
+            <option value="mine" selected="@(Model.Scope == "mine")">Իմ պատվերները</option>
+            <option value="date" selected="@(Model.Scope == "date")">Ըստ ամսաթվի</option>
+            <option value="all" selected="@(Model.Scope == "all")">Բոլորը</option>
+        </select>
+    </div>
+    <div class="col-6 col-md-2"><input type="date" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" class="form-control" onchange="this.form.scope.value='date';this.form.submit()" /></div>
+    <div class="col-8 col-md-3"><input name="q" value="@Model.Q" class="form-control" placeholder="Հեռախոս / անուն / #" /></div>
+    <div class="col-4 col-md-2"><button class="btn btn-outline-dark w-100">Փնտրել</button></div>
+</form>
+<div class="list-group">
+@foreach (var o in Model.Orders)
+{
+    <a href="/Orders/Details/@o.Id" class="list-group-item list-group-item-action">
+        <div class="d-flex justify-content-between">
+            <div><b>#@o.Id</b> · @o.Customer?.Name <span class="text-muted small">@Phone.Display(o.Customer?.Phone)</span></div>
+            <span class="badge @IndexModel.Badge(o.Status)">@o.Status.Hy()</span>
+        </div>
+        <div class="small text-muted">
+            @o.DueAt.ToString("dd.MM HH:mm") · @o.Type.Hy() · @(o.Executor?.FullName ?? "կատարող չկա")
+            @if (o.IsDelivery) { <span>· 🚚 @o.DeliveryDistrict</span> }
+            · <span class="money">@o.TotalPrice.ToString("#,0") ֏</span>
+        </div>
+        <div class="small">@string.Join(", ", o.Items.Select(i => $"{i.Name} × {i.Quantity:0.#}"))</div>
+    </a>
+}
+</div>
+@if (!Model.Orders.Any()) { <p class="text-muted">Պատվերներ չկան</p> }

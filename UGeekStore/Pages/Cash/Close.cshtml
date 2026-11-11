@@ -1,0 +1,64 @@
+@page
+@model UGeekStore.Pages.Cash.CloseModel
+@{ ViewData["Title"] = "Կասսայի փակում"; var t = Model.Totals; }
+<h1 class="h4 mb-3">Կասսայի փակում</h1>
+@if (Model.Shift == null)
+{
+    <div class="alert alert-info">Բաց հերթափոխ չկա։ <a href="/Cash">Վերադառնալ</a></div>
+}
+else
+{
+    <div class="static-date mb-3">@Model.Shift.Date.ToString("dd.MM.yyyy") · @Model.RegisterName</div>
+    <form method="post" class="card card-body" id="closeForm">
+        <input type="hidden" asp-for="RegisterId" />
+        <table class="table align-middle mb-2">
+            <thead><tr><th>Դրամ</th><th style="width:40%">Քանակ</th><th class="text-end">Գումար</th></tr></thead>
+            <tbody>
+            @for (var i = 0; i < Banknotes.Denominations.Length; i++)
+            {
+                var d = Banknotes.Denominations[i];
+                <tr>
+                    <td class="fw-semibold money">@d.ToString("#,0") ֏</td>
+                    <td><input name="Counts[@i]" value="@Model.Counts[i]" type="number" inputmode="numeric" min="0" step="1"
+                               class="form-control count" data-den="@d" /></td>
+                    <td class="text-end money sub">0 ֏</td>
+                </tr>
+            }
+            </tbody>
+            <tfoot><tr class="table-light"><th colspan="2">Ընդհանուր գումար</th><th class="text-end money fs-5" id="total">0 ֏</th></tr></tfoot>
+        </table>
+        <div class="small text-muted mb-3">
+            Հերթափոխի շարժեր՝ մուտք <span class="money">@t!.Income.ToString("#,0") ֏</span>,
+            ելք <span class="money">@t.Expense.ToString("#,0") ֏</span>,
+            պարտք <span class="money">@t.Debt.ToString("#,0") ֏</span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Մեկնաբանություն</label>
+            <input asp-for="Comment" class="form-control" />
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-brand flex-fill" onclick="return confirm('Հաստատե՞լ կասսայի փակումը՝ ' + document.getElementById('total').textContent)">Հաստատել</button>
+            <a class="btn btn-outline-secondary flex-fill" href="/Cash?registerId=@Model.RegisterId">Չեղարկել</a>
+        </div>
+    </form>
+}
+@section Scripts {
+<script>
+(function () {
+    const fmt = n => n.toLocaleString('en-US').replace(/,/g, ' ') + ' ֏';
+    function calc() {
+        let total = 0;
+        document.querySelectorAll('.count').forEach(i => {
+            const v = Math.max(0, parseInt(i.value || '0', 10) || 0);
+            const sub = v * Number(i.dataset.den);
+            i.closest('tr').querySelector('.sub').textContent = fmt(sub);
+            total += sub;
+        });
+        const el = document.getElementById('total');
+        if (el) el.textContent = fmt(total);
+    }
+    document.addEventListener('input', e => { if (e.target.classList.contains('count')) calc(); });
+    calc();
+})();
+</script>
+}

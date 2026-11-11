@@ -1,0 +1,54 @@
+@page "{id:int?}"
+@model UGeekStore.Pages.Customers.EditModel
+@{ ViewData["Title"] = Model.Customer.Id == 0 ? "Նոր հաճախորդ" : Model.Customer.Name; }
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <form method="post" class="card card-body">
+            <div asp-validation-summary="All" class="text-danger small"></div>
+            <div class="mb-2"><label class="form-label">Անուն *</label><input asp-for="Customer.Name" class="form-control" required /></div>
+            <div class="mb-2"><label class="form-label">Հեռախոս *</label><input asp-for="Customer.Phone" class="form-control" inputmode="tel" required /></div>
+            <div class="mb-2"><label class="form-label">Հասցե</label><input asp-for="Customer.Address" class="form-control" /></div>
+            <div class="mb-2"><label class="form-label">Թաղամաս</label><input asp-for="Customer.District" class="form-control" /></div>
+            <div class="mb-2"><label class="form-label">Նշումներ</label><textarea asp-for="Customer.Notes" class="form-control" rows="2"></textarea></div>
+            <div class="form-check mb-3"><input asp-for="Customer.MarketingConsent" class="form-check-input" />
+                <label class="form-check-label" asp-for="Customer.MarketingConsent">Համաձայն է ստանալ նոր տեսականու մասին հաղորդագրություններ</label></div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-brand flex-fill">Պահպանել</button>
+                <a class="btn btn-outline-secondary flex-fill" href="/Customers">Չեղարկել</a>
+            </div>
+        </form>
+    </div>
+    @if (Model.Customer.Id != 0)
+    {
+        <div class="col-12 col-lg-6">
+            <div class="card card-body mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2"><h2 class="h6 mb-0">Խնդիրներ</h2></div>
+                @foreach (var i in Model.Customer.Issues.OrderByDescending(i => i.CreatedAt))
+                {
+                    <div class="d-flex justify-content-between border-bottom py-1 small @(i.Resolved ? "text-muted" : "")">
+                        <div>@i.CreatedAt.ToString("dd.MM.yyyy") — @i.Description @if (i.OrderId != null) { <a href="/Orders/Details/@i.OrderId">#@i.OrderId</a> }</div>
+                        @if (!i.Resolved)
+                        {
+                            <form method="post" asp-page-handler="Resolve"><input type="hidden" name="issueId" value="@i.Id" /><button class="btn btn-sm btn-link p-0">Լուծված է</button></form>
+                        }
+                    </div>
+                }
+                <form method="post" asp-page-handler="Issue" class="mt-2 d-flex gap-2">
+                    <input name="description" class="form-control" placeholder="Նոր խնդիր" required />
+                    <button class="btn btn-outline-danger">+</button>
+                </form>
+            </div>
+            <div class="card card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h6 mb-0">Պատվերներ (@Model.Orders.Count)</h2>
+                    <a class="btn btn-sm btn-outline-dark" href="/Orders/Create?phone=@Model.Customer.Phone">+ Պատվեր</a>
+                </div>
+                @foreach (var o in Model.Orders)
+                {
+                    <a class="d-block small border-bottom py-1" href="/Orders/Details/@o.Id">#@o.Id · @o.DueAt.ToString("dd.MM.yyyy") · @o.Status.Hy() · @o.TotalPrice.ToString("#,0") ֏</a>
+                }
+            </div>
+        </div>
+    }
+</div>

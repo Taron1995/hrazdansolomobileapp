@@ -1,0 +1,96 @@
+@page
+@model UGeekStore.Pages.Purchases.IndexModel
+@{ ViewData["Title"] = "Հումքի գնում"; var mgmt = User.IsAny(Roles.Management); }
+<h1 class="h4 mb-3">Հումքի գնման պրոցես</h1>
+<p class="small text-muted">Հայտ → Հաստատում (մենեջեր) → Գնում (փաստացի գումար, ավտոմատ դրամարկղի ելք ըստ ցանկության) → Պահեստի թարմացում</p>
+
+@if (Model.LowStock.Any())
+{
+    <div class="alert alert-warning"><b>Պակասող հումք</b>:
+        @string.Join(", ", Model.LowStock.Select(i => $"{i.Name} ({i.StockQty:0.#}/{i.MinQty:0.#} {i.Unit})"))</div>
+}
+
+<form method="post" asp-page-handler="Create" class="card card-body mb-3">
+    <h2 class="h6">Նոր հայտ</h2>
+    <div class="row g-2">
+        <div class="col-12 col-md-4"><input name="itemName" class="form-control" list="ingredients" placeholder="Հումք" required /></div>
+        <div class="col-4 col-md-2"><input name="quantity" type="number" step="0.01" min="0" class="form-control" placeholder="Քանակ" required /></div>
+        <div class="col-4 col-md-1"><input name="unit" class="form-control" placeholder="կգ" /></div>
+        <div class="col-4 col-md-2"><input name="estimatedCost" type="number" min="0" class="form-control" placeholder="Մոտ. գին" /></div>
+        <div class="col-8 col-md-3"><input name="supplier" class="form-control" placeholder="Մատակարար" /></div>
+        <div class="col-12 col-md-9"><input name="notes" class="form-control" placeholder="Նշումներ" /></div>
+        <div class="col-4 col-md-3"><button class="btn btn-brand w-100">Ավելացնել</button></div>
+    </div>
+    <datalist id="ingredients">@foreach (var i in Model.Ingredients) { <option value="@i.Name"></option> }</datalist>
+</form>
+
+@foreach (var group in Model.Requests.GroupBy(r => r.Status).OrderBy(g => g.Key))
+{
+    <h2 class="h6 mt-3">@group.Key.Hy() (@group.Count())</h2>
+    <div class="list-group mb-2">
+    @foreach (var r in group)
+    {
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between flex-wrap gap-2">
+                <div><b>@r.ItemName</b> · @r.Quantity.ToString("0.##") @r.Unit
+                    <div class="small text-muted">@r.CreatedAt.ToString("dd.MM HH:mm") · @r.CreatedBy?.FullName @(r.Supplier != null ? "· " + r.Supplier : "")
+                        · մոտ. @r.EstimatedCost.ToString("#,0") ֏ @(r.ActualCost != null ? $"· փաստ. {r.ActualCost:#,0} ֏" : "")</div>
+                    @if (r.Notes != null) { <div class="small">@r.Notes</div> }
+                </div>
+                @if (mgmt && r.Status == PurchaseStatus.Requested)
+                {
+                    <form method="post" asp-page-handler="Status" class="d-flex gap-1">
+                        <input type="hidden" name="id" value="@r.Id" />
+                        <button name="status" value="Approved" class="btn btn-sm btn-outline-success">Հաստատել</button>
+                        <button name="status" value="Rejected" class="btn btn-sm btn-outline-danger">Մերժել</button>
+                    </form>
+                }
+                @if (mgmt && r.Status == PurchaseStatus.Approved)
+                {
+                    <form method="post" asp-page-handler="Purchased" class="d-flex flex-wrap gap-1 align-items-center">
+                        <input type="hidden" name="id" value="@r.Id" />
+                        <input name="actualCost" type="number" min="0" class="form-control form-control-sm" style="width:8rem" placeholder="Փաստ. գին" value="@r.EstimatedCost" required />
+                        <label class="small"><input type="checkbox" name="toCash" value="true" checked /> ելք դրամարկղից</label>
+                        <button class="btn btn-sm btn-success">Գնված է</button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+    </div>
+}
+
+<details class="card card-body mt-4">
+    <summary class="fw-semibold">Հումքի պահեստ</summary>
+    <div class="table-responsive mt-2">
+    <table class="table table-sm">
+        <thead><tr><th>Անվանում</th><th>Մնացորդ</th><th>Նվազագույն</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var i in Model.Ingredients)
+        {
+            <tr class="@(i.StockQty < i.MinQty ? "table-warning" : "")">
+                <td>@i.Name</td>
+                <td colspan="3">
+                    <form method="post" asp-page-handler="Stock" class="d-flex gap-1">
+                        <input type="hidden" name="id" value="@i.Id" />
+                        <input name="stockQty" type="number" step="0.01" value="@i.StockQty" class="form-control form-control-sm" style="width:6rem" />
+                        <input name="minQty" type="number" step="0.01" value="@i.MinQty" class="form-control form-control-sm" style="width:6rem" />
+                        <span class="small align-self-center">@i.Unit</span>
+                        <button class="btn btn-sm btn-outline-dark">✓</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+    @if (mgmt)
+    {
+        <form method="post" asp-page-handler="Ingredient" class="d-flex gap-2">
+            <input name="name" class="form-control" placeholder="Նոր հումք" required />
+            <input name="unit" class="form-control" style="max-width:6rem" placeholder="կգ" />
+            <input name="minQty" type="number" step="0.01" class="form-control" style="max-width:7rem" placeholder="Նվազ." />
+            <button class="btn btn-outline-dark">+</button>
+        </form>
+    }
+</details>

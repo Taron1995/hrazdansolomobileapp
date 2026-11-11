@@ -1,0 +1,50 @@
+@page
+@model UGeekStore.Pages.IndexModel
+@{ ViewData["Title"] = "Գլխավոր"; var u = User; }
+<div class="d-flex justify-content-between align-items-baseline mb-3">
+    <h1 class="h4 mb-0">Բարև, @u.FullName()</h1>
+    <span class="text-muted small">@Model.RoleName · @Model.Today.ToString("dd.MM.yyyy")</span>
+</div>
+
+<div class="row g-3">
+@if (u.IsAny(Roles.CashDesk))
+{
+    <div class="col-6 col-md-4"><a class="tile tile-primary" href="/Cash/New">
+        <div class="tile-title">+ Դրամարկղի շարժ</div><div class="tile-sub">Մուտք / ելք / պարտք</div></a></div>
+    <div class="col-6 col-md-4"><a class="tile" href="/Cash/Close">
+        <div class="tile-title">Կասսայի փակում</div>
+        <div class="tile-sub">@(Model.ShiftOpen ? "Հերթափոխը բաց է" : "Բաց հերթափոխ չկա")</div></a></div>
+}
+@if (u.IsAny(Roles.CashDesk))
+{
+    <div class="col-6 col-md-4"><a class="tile" href="/Orders/Create">
+        <div class="tile-title">+ Նոր պատվեր</div><div class="tile-sub">Անհատական / առկա տեսականի</div></a></div>
+}
+    <div class="col-6 col-md-4"><a class="tile" href="/Orders?scope=@(u.IsInRole(Roles.Confectioner) ? "mine" : "today")">
+        <div class="tile-title">Պատվերներ</div><div class="tile-sub">Այսօր՝ @Model.OrdersToday · բաց՝ @Model.OrdersOpen</div></a></div>
+@if (u.IsAny(Roles.Production))
+{
+    <div class="col-6 col-md-4"><a class="tile" href="/Production">
+        <div class="tile-title">Արտադրության պլան</div><div class="tile-sub">Ով ինչ է պատրաստում</div></a></div>
+    <div class="col-6 col-md-4"><a class="tile" href="/Purchases">
+        <div class="tile-title">Հումքի գնում</div><div class="tile-sub">Բաց հայտեր՝ @Model.PurchasesOpen</div></a></div>
+}
+@if (u.IsAny(Roles.CashDesk))
+{
+    <div class="col-6 col-md-4"><a class="tile" href="/MissedCalls">
+        <div class="tile-title">Բաց թողնված զանգեր</div><div class="tile-sub">Չպատասխանված՝ @Model.MissedOpen</div></a></div>
+    <div class="col-6 col-md-4"><a class="tile" href="/Customers">
+        <div class="tile-title">CRM</div><div class="tile-sub">Հաճախորդների բազա</div></a></div>
+}
+@if (u.IsAny(Roles.Management))
+{
+    <div class="col-6 col-md-4"><a class="tile" href="/Smm">
+        <div class="tile-title">Marketing / SMM</div><div class="tile-sub">Բովանդակության պլան</div></a></div>
+    <div class="col-6 col-md-4"><a class="tile" href="/Products">
+        <div class="tile-title">Տեսականի</div><div class="tile-sub">Նոր ապրանք → ծանուցում հաճախորդներին</div></a></div>
+}
+    <div class="col-6 col-md-4"><a class="tile" href="/Checklist">
+        <div class="tile-title">Չեկլիստ</div><div class="tile-sub">Այսօր մնացել է՝ @Model.ChecklistLeft</div></a></div>
+    <div class="col-6 col-md-4"><a class="tile" href="/Chat">
+        <div class="tile-title">Ընդհանուր չատ</div><div class="tile-sub">Թիմի հաղորդակցություն</div></a></div>
+</div>

@@ -1,0 +1,8 @@
+{
+  "name": "Ani Hrazdan",
+  "short_name": "Ani Hrazdan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf7f5",
+  "theme_color": "#7a3e48"
+}

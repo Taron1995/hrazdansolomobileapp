@@ -1,0 +1,20 @@
+@page "{id:int?}"
+@model UGeekStore.Pages.Employees.EditModel
+@{ ViewData["Title"] = Model.Id == null ? "Նոր աշխատակից" : Model.FullName; }
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<form method="post" class="card card-body" style="max-width:36rem">
+    <div asp-validation-summary="All" class="text-danger small"></div>
+    <div class="mb-2"><label class="form-label">Անուն ազգանուն *</label><input asp-for="FullName" class="form-control" required /></div>
+    <div class="mb-2"><label class="form-label">Gmail / էլ. փոստ *</label><input asp-for="Email" type="email" class="form-control" required /></div>
+    <div class="mb-2"><label class="form-label">Հեռախոս</label><input asp-for="PhoneNumber" class="form-control" /></div>
+    <div class="mb-2"><label class="form-label">Դեր</label>
+        <select asp-for="Role" class="form-select">@foreach (var r in Enum.GetValues<UserRole>()) { <option value="@r">@r.Hy()</option> }</select></div>
+    <div class="mb-2"><label class="form-label">Գաղտնաբառ @(Model.Id == null ? "" : "(դատարկ թողնել՝ չփոխելու համար)")</label>
+        <input asp-for="Password" type="password" class="form-control" autocomplete="new-password" />
+        <div class="small text-muted">Ոչ պարտադիր, եթե աշխատակիցը մտնելու է Gmail-ով</div></div>
+    <div class="form-check mb-3"><input asp-for="IsActive" class="form-check-input" /><label class="form-check-label" asp-for="IsActive">Ակտիվ</label></div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-brand flex-fill">Պահպանել</button>
+        <a class="btn btn-outline-secondary flex-fill" href="/Employees">Չեղարկել</a>
+    </div>
+</form>

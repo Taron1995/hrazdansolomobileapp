@@ -1,0 +1,78 @@
+@inject IConfiguration Cfg
+@{
+    var u = User;
+    var signedIn = u.Identity?.IsAuthenticated == true;
+    var appName = Cfg["App:Name"] ?? "UGeekStore";
+}
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#7a3e48" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>@ViewData["Title"] · @appName</title>
+    <link href="/lib/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/site.css" rel="stylesheet" asp-append-version="true" />
+</head>
+<body>
+@if (signedIn)
+{
+    <nav class="navbar navbar-expand-lg navbar-dark app-nav sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-semibold" href="/">@appName</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-label="Մենյու">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav me-auto">
+                    @if (u.IsAny(Roles.CashDesk))
+                    {
+                        <li class="nav-item"><a class="nav-link" href="/Cash">Դրամարկղ</a></li>
+                    }
+                    <li class="nav-item"><a class="nav-link" href="/Orders">Պատվերներ</a></li>
+                    @if (u.IsAny(Roles.Production))
+                    {
+                        <li class="nav-item"><a class="nav-link" href="/Production">Արտադրություն</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Purchases">Հումքի գնում</a></li>
+                    }
+                    @if (u.IsAny(Roles.CashDesk))
+                    {
+                        <li class="nav-item"><a class="nav-link" href="/Customers">CRM</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/MissedCalls">Բաց թողնված զանգեր</a></li>
+                    }
+                    @if (u.IsAny(Roles.Management))
+                    {
+                        <li class="nav-item"><a class="nav-link" href="/Products">Տեսականի</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Smm">SMM</a></li>
+                    }
+                    <li class="nav-item"><a class="nav-link" href="/Checklist">Չեկլիստ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Chat">Չատ</a></li>
+                    @if (u.IsInRole(Roles.Admin))
+                    {
+                        <li class="nav-item"><a class="nav-link" href="/Employees">Աշխատակիցներ</a></li>
+                    }
+                </ul>
+                <span class="navbar-text small me-3">@u.FullName()</span>
+                <form method="post" action="/Account/Logout" class="d-inline">
+                    <button class="btn btn-sm btn-outline-light">Ելք</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+}
+<main class="container py-3">
+    @if (TempData["ok"] is string ok)
+    {
+        <div class="alert alert-success">@ok</div>
+    }
+    @if (TempData["err"] is string err)
+    {
+        <div class="alert alert-danger">@err</div>
+    }
+    @RenderBody()
+</main>
+<script src="/lib/bootstrap/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

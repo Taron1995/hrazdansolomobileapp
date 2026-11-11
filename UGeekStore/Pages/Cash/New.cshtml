@@ -1,0 +1,107 @@
+@page
+@model UGeekStore.Pages.Cash.NewModel
+@{ ViewData["Title"] = "Դրամարկղի շարժ"; }
+<h1 class="h4 mb-3">Դրամարկղի շարժ</h1>
+<form method="post" id="cashForm" class="card card-body" novalidate>
+    <input type="hidden" asp-for="RegisterId" />
+    <input type="hidden" asp-for="DeviceTime" id="deviceTime" />
+    <div asp-validation-summary="All" class="text-danger small"></div>
+
+    <div class="mb-3">
+        <label class="form-label text-muted small mb-1">Ամսաթիվ (ֆիքսված, չի փոփոխվում)</label>
+        <div class="static-date">@Model.ShiftDate.ToString("dd.MM.yyyy")</div>
+        <div class="small text-muted mt-1">Ժամը՝ <span id="clock">@Model.ServerNow.ToString("HH:mm")</span> (սերվերի ժամ) · @Model.RegisterName</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-muted small mb-1">Գործարքի տեսակ</label>
+        <div class="form-control bg-light">Կանխիկի շարժ</div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Տեսակ</label>
+        <div class="btn-group w-100 choice-group" role="group">
+            @foreach (var t in Enum.GetValues<CashMovementType>())
+            {
+                <input type="radio" class="btn-check" name="Type" id="type_@t" value="@t" checked="@(Model.Type == t)" required />
+                <label class="btn btn-outline-dark" for="type_@t">@t.Hy()</label>
+            }
+        </div>
+    </div>
+
+    @foreach (var (type, cats) in CashCategories.All)
+    {
+        <div class="mb-3 cat-block" data-type="@type" hidden>
+            <label class="form-label">@type.Hy() — տարբերակ</label>
+            @foreach (var c in cats)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="Category" id="cat_@(type)_@c.GetHashCode()" value="@c"
+                           checked="@(Model.Type == type && Model.Category == c)" @(cats.Length == 1 ? "data-single" : "") />
+                    <label class="form-check-label" for="cat_@(type)_@c.GetHashCode()">@c</label>
+                </div>
+            }
+        </div>
+    }
+
+    <div id="detailBlock" hidden>
+        <div class="mb-3">
+            <label class="form-label">Գումար (֏) <span class="text-danger">*</span></label>
+            <input asp-for="Amount" class="form-control form-control-lg" type="number" inputmode="decimal" min="1" step="1" required />
+            <span asp-validation-for="Amount" class="text-danger small"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Մեկնաբանություն</label>
+            <textarea asp-for="Comment" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Գանձապահի անուն <span class="text-danger">*</span></label>
+            <input asp-for="CashierName" class="form-control" required />
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-brand flex-fill" id="saveBtn">Պահպանել</button>
+        <a class="btn btn-outline-secondary flex-fill" href="/Cash?registerId=@Model.RegisterId">Չեղարկել</a>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+(function () {
+    const form = document.getElementById('cashForm');
+    const detail = document.getElementById('detailBlock');
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function deviceTime() {
+        const d = new Date();
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+    function refresh() {
+        const type = form.querySelector('input[name=Type]:checked')?.value;
+        document.querySelectorAll('.cat-block').forEach(b => {
+            const on = b.dataset.type === type;
+            b.hidden = !on;
+            b.querySelectorAll('input').forEach(i => { i.disabled = !on; });
+            if (on) {
+                const radios = b.querySelectorAll('input');
+                if (radios.length === 1) radios[0].checked = true;
+            }
+        });
+        const cat = form.querySelector('input[name=Category]:checked:not(:disabled)');
+        detail.hidden = !cat;
+    }
+    form.addEventListener('change', refresh);
+    form.addEventListener('submit', e => {
+        document.getElementById('deviceTime').value = deviceTime();
+        const amount = form.querySelector('#Amount');
+        if (detail.hidden || !amount.value || Number(amount.value) <= 0) {
+            e.preventDefault();
+            alert('Ընտրեք տեսակը և լրացրեք գումարը');
+            return;
+        }
+        document.getElementById('saveBtn').disabled = true;
+    });
+    refresh();
+})();
+</script>
+}

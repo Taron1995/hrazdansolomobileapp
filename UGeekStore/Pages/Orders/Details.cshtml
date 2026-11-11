@@ -1,0 +1,71 @@
+@page "{id:int}"
+@model UGeekStore.Pages.Orders.DetailsModel
+@{ var o = Model.Order; ViewData["Title"] = $"Պատվեր #{o.Id}"; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Պատվեր #@o.Id</h1>
+    <span class="badge fs-6 @IndexModel.Badge(o.Status)">@o.Status.Hy()</span>
+</div>
+
+@if (Model.Issues.Any(i => !i.Resolved))
+{
+    <div class="alert alert-danger issue-warning"><b>Ուշադրություն․ այս հաճախորդի հետ եղել են խնդիրներ</b>
+        <ul class="mb-0 small">@foreach (var i in Model.Issues.Where(i => !i.Resolved)) { <li>@i.CreatedAt.ToString("dd.MM.yyyy"): @i.Description</li> }</ul></div>
+}
+
+<div class="row g-3">
+    <div class="col-12 col-lg-7">
+        <div class="card card-body mb-3">
+            <dl class="row mb-0">
+                <dt class="col-5">Տեսակ</dt><dd class="col-7">@o.Type.Hy()</dd>
+                <dt class="col-5">Հաճախորդ</dt><dd class="col-7"><a href="/Customers/Edit/@o.CustomerId">@o.Customer?.Name</a><br />
+                    <a href="tel:+@o.Customer?.Phone">@Phone.Display(o.Customer?.Phone)</a></dd>
+                <dt class="col-5">Պատրաստ լինի</dt><dd class="col-7 fw-semibold">@o.DueAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                <dt class="col-5">Կատարող</dt><dd class="col-7">@(o.Executor?.FullName ?? "—")</dd>
+                <dt class="col-5">Ընդունել է</dt><dd class="col-7">@o.CreatedBy?.FullName, @o.CreatedAt.ToString("dd.MM HH:mm")</dd>
+                <dt class="col-5">Գին / կանխավճար</dt><dd class="col-7 money">@o.TotalPrice.ToString("#,0") ֏ / @o.Prepayment.ToString("#,0") ֏
+                    <div class="small text-muted">Մնացորդ՝ @((o.TotalPrice + o.DeliveryFee - o.Prepayment).ToString("#,0")) ֏</div></dd>
+                @if (o.IsDelivery)
+                {
+                    <dt class="col-5">Առաքում</dt><dd class="col-7">@o.DeliveryAddress<br /><span class="small text-muted">@o.DeliveryDistrict · @o.Courier?.FullName · @o.DeliveryFee.ToString("#,0") ֏</span></dd>
+                }
+            </dl>
+        </div>
+        <div class="card card-body mb-3">
+            <table class="table table-sm mb-2">
+                @foreach (var i in o.Items) { <tr><td>@i.Name</td><td class="text-end">× @i.Quantity.ToString("0.#")</td><td class="text-end money">@((i.Quantity * i.UnitPrice).ToString("#,0"))</td></tr> }
+            </table>
+            @if (!string.IsNullOrEmpty(o.Description)) { <div style="white-space:pre-wrap">@o.Description</div> }
+        </div>
+    </div>
+    <div class="col-12 col-lg-5">
+        <div class="card card-body mb-3">
+            <h2 class="h6">Կարգավիճակ</h2>
+            <form method="post" asp-page-handler="Status" class="d-flex flex-wrap gap-2">
+                @foreach (var s in Model.NextStatuses)
+                {
+                    <button name="status" value="@s" class="btn btn-sm @(s == OrderStatus.Cancelled ? "btn-outline-danger" : "btn-outline-dark")">@s.Hy()</button>
+                }
+            </form>
+        </div>
+        @if (User.IsAny(Roles.CashDesk))
+        {
+            <div class="card card-body mb-3">
+                <h2 class="h6">Վերանշանակել կատարողին</h2>
+                <form method="post" asp-page-handler="Executor" class="d-flex gap-2">
+                    <select name="executorId" class="form-select">
+                        <option value="">—</option>
+                        @foreach (var e in Model.Executors) { <option value="@e.Id" selected="@(e.Id == o.ExecutorId)" class="load-@e.Level">@e.Label</option> }
+                    </select>
+                    <button class="btn btn-outline-dark">OK</button>
+                </form>
+            </div>
+        }
+        <div class="card card-body mb-3">
+            <h2 class="h6">Ֆիքսել խնդիր (կերևա հաճախորդի հաջորդ պատվերներում)</h2>
+            <form method="post" asp-page-handler="Issue">
+                <textarea name="description" class="form-control mb-2" rows="2" required placeholder="Ինչ խնդիր առաջացավ"></textarea>
+                <button class="btn btn-outline-danger btn-sm">Ֆիքսել</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,20 @@
+@model IEnumerable<CashTransaction>
+<div class="table-responsive">
+<table class="table table-sm bg-white">
+    <thead><tr><th>Ժամ</th><th>Տեսակ</th><th>Նկարագիր</th><th class="text-end">Գումար</th><th>Գանձապահ</th></tr></thead>
+    <tbody>
+    @foreach (var t in Model.OrderByDescending(x => x.CreatedAt))
+    {
+        <tr class="@(t.IsVoided ? "text-decoration-line-through text-muted" : "")">
+            <td>@t.CreatedAt.ToString("HH:mm")</td>
+            <td>@t.Type.Hy()</td>
+            <td>@t.Category @if (!string.IsNullOrEmpty(t.Comment)) { <div class="small text-muted">@t.Comment</div> }
+                @if (t.IsVoided) { <div class="small text-danger">Չեղարկված՝ @t.VoidReason</div> }</td>
+            <td class="text-end money"><partial name="_Money" model="t.Amount" /></td>
+            <td class="small">@t.CashierName</td>
+        </tr>
+    }
+    @if (!Model.Any()) { <tr><td colspan="5" class="text-muted text-center">Շարժեր չկան</td></tr> }
+    </tbody>
+</table>
+</div>

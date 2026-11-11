@@ -1,0 +1,42 @@
+@page
+@model UGeekStore.Pages.Cash.IndexModel
+@{ ViewData["Title"] = "Դրամարկղ"; }
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h4 mb-0">Դրամարկղ · @Model.Register?.Name</h1>
+    <div class="d-flex gap-2">
+        @if (Model.Registers.Count > 1)
+        {
+            <form method="get"><select name="registerId" class="form-select form-select-sm" onchange="this.form.submit()">
+                @foreach (var r in Model.Registers) { <option value="@r.Id" selected="@(r.Id == Model.Register?.Id)">@r.Name</option> }
+            </select></form>
+        }
+        @if (User.IsAny(Roles.Management)) { <a class="btn btn-outline-secondary btn-sm" href="/Cash/History">Պատմություն</a> }
+    </div>
+</div>
+
+@if (Model.Shift == null)
+{
+    <div class="card card-body">
+        <p class="mb-2">Բաց հերթափոխ չկա։ Առաջին շարժը գրանցելիս հերթափոխը կբացվի <b>@Model.Today.ToString("dd.MM.yyyy")</b> ամսաթվով։</p>
+        <a class="btn btn-brand" href="/Cash/New?registerId=@Model.Register?.Id">+ Դրամարկղի շարժ</a>
+    </div>
+}
+else
+{
+    var t = Model.Totals!;
+    if (Model.Shift.Date < Model.Today)
+    {
+        <div class="alert alert-warning">Հերթափոխը բացվել է @Model.Shift.Date.ToString("dd.MM.yyyy")-ին և դեռ փակված չէ։ Փակեք կասսան։</div>
+    }
+    <div class="static-date mb-3">@Model.Shift.Date.ToString("dddd, dd.MM.yyyy", new System.Globalization.CultureInfo("hy-AM"))</div>
+    <div class="row g-2 mb-3 text-center">
+        <div class="col-4"><div class="card card-body p-2"><div class="small text-muted">Մուտք</div><div class="money text-success fw-semibold"><partial name="_Money" model="t.Income" /></div></div></div>
+        <div class="col-4"><div class="card card-body p-2"><div class="small text-muted">Ելք</div><div class="money text-danger fw-semibold"><partial name="_Money" model="t.Expense" /></div></div></div>
+        <div class="col-4"><div class="card card-body p-2"><div class="small text-muted">Պարտք</div><div class="money text-warning fw-semibold"><partial name="_Money" model="t.Debt" /></div></div></div>
+    </div>
+    <div class="d-flex gap-2 mb-3">
+        <a class="btn btn-brand flex-fill" href="/Cash/New?registerId=@Model.Register?.Id">+ Դրամարկղի շարժ</a>
+        <a class="btn btn-outline-dark flex-fill" href="/Cash/Close?registerId=@Model.Register?.Id">Կասսայի փակում</a>
+    </div>
+    <partial name="_Transactions" model="Model.Shift.Transactions" />
+}

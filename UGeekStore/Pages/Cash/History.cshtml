@@ -1,0 +1,61 @@
+@page
+@model UGeekStore.Pages.Cash.HistoryModel
+@{ ViewData["Title"] = "Դրամարկղի պատմություն"; }
+<h1 class="h4 mb-3">Դրամարկղի պատմություն</h1>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-6 col-md-3"><input type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control" /></div>
+    <div class="col-6 col-md-3"><input type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control" /></div>
+    <div class="col-12 col-md-2"><button class="btn btn-outline-dark w-100">Ցույց տալ</button></div>
+</form>
+@foreach (var s in Model.Shifts)
+{
+    var t = CashService.Totals(s.Transactions);
+    <details class="card mb-2">
+        <summary class="card-body py-2 d-flex flex-wrap gap-3 align-items-center">
+            <b>@s.Date.ToString("dd.MM.yyyy")</b>
+            <span class="text-muted small">@s.CashRegister?.Name</span>
+            <span class="badge @(s.Status == ShiftStatus.Open ? "bg-warning text-dark" : "bg-secondary")">@(s.Status == ShiftStatus.Open ? "Բաց" : "Փակ")</span>
+            <span class="small">Մուտք <b class="money">@t.Income.ToString("#,0")</b> · Ելք <b class="money">@t.Expense.ToString("#,0")</b> · Պարտք <b class="money">@t.Debt.ToString("#,0")</b></span>
+            @if (s.Status == ShiftStatus.Closed)
+            {
+                <span class="small">Կասսա՝ <b class="money">@s.CountedTotal.ToString("#,0") ֏</b> (@s.ClosedBy?.FullName, @s.ClosedAt?.ToString("HH:mm"))</span>
+            }
+        </summary>
+        <div class="card-body pt-0">
+            @if (s.Status == ShiftStatus.Closed)
+            {
+                <div class="small mb-2">
+                    @for (var i = 0; i < Banknotes.Denominations.Length; i++)
+                    {
+                        <span class="me-3">@Banknotes.Denominations[i].ToString("#,0") × @(new[] { s.Count1000, s.Count2000, s.Count5000, s.Count10000, s.Count20000, s.Count50000 }[i])</span>
+                    }
+                    @if (!string.IsNullOrEmpty(s.CloseComment)) { <div class="text-muted">@s.CloseComment</div> }
+                </div>
+            }
+            <div class="table-responsive">
+            <table class="table table-sm">
+                <tbody>
+                @foreach (var x in s.Transactions.OrderBy(x => x.CreatedAt))
+                {
+                    <tr class="@(x.IsVoided ? "text-decoration-line-through text-muted" : "")">
+                        <td>@x.CreatedAt.ToString("HH:mm")</td><td>@x.Type.Hy()</td>
+                        <td>@x.Category <span class="small text-muted">@x.Comment</span>
+                            @if (x.IsVoided) { <div class="small text-danger">@x.VoidReason</div> }</td>
+                        <td class="text-end money">@x.Amount.ToString("#,0")</td><td class="small">@x.CashierName</td>
+                        <td>@if (!x.IsVoided)
+                            {
+                                <form method="post" asp-page-handler="Void" class="d-flex gap-1"
+                                      onsubmit="const r = prompt('Չեղարկման պատճառ'); if (!r) return false; this.reason.value = r;">
+                                    <input type="hidden" name="id" value="@x.Id" /><input type="hidden" name="reason" />
+                                    <button class="btn btn-sm btn-outline-danger">Չեղարկել</button>
+                                </form>
+                            }</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </details>
+}
+@if (!Model.Shifts.Any()) { <p class="text-muted">Տվյալներ չկան</p> }

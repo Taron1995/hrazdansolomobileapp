@@ -1,0 +1,41 @@
+@page
+@model UGeekStore.Pages.MissedCalls.IndexModel
+@{ ViewData["Title"] = "Բաց թողնված զանգեր"; }
+<h1 class="h4 mb-3">Բաց թողնված զանգեր</h1>
+<div class="row g-2 mb-3 text-center">
+    <div class="col-4"><div class="card card-body p-2"><div class="small text-muted">Այսօր</div><div class="fw-semibold fs-5">@Model.TodayCount</div></div></div>
+    <div class="col-4"><div class="card card-body p-2"><div class="small text-muted">7 օր</div><div class="fw-semibold fs-5">@Model.WeekCount</div></div></div>
+    <div class="col-4"><div class="card card-body p-2"><div class="small text-muted">Չպատասխանված</div><div class="fw-semibold fs-5 text-danger">@Model.Open.Count</div></div></div>
+</div>
+
+<form method="post" asp-page-handler="Add" class="d-flex gap-2 mb-3">
+    <input name="phone" class="form-control" inputmode="tel" placeholder="Հեռախոսահամար" required />
+    <button class="btn btn-outline-dark text-nowrap">+ Ավելացնել</button>
+</form>
+
+<h2 class="h6">Հետզանգ է պետք</h2>
+<div class="list-group mb-3">
+@foreach (var c in Model.Open)
+{
+    var cust = Model.CustomerNames.GetValueOrDefault(c.Phone);
+    <div class="list-group-item d-flex justify-content-between align-items-center gap-2 flex-wrap">
+        <div><a href="tel:+@c.Phone" class="fw-semibold">@Phone.Display(c.Phone)</a> @if (cust != null) { <span>· @cust</span> }
+            <div class="small text-muted">@c.CalledAt.ToString("dd.MM HH:mm") · @c.Source @(Model.Repeats.GetValueOrDefault(c.Phone) > 1 ? $"· {Model.Repeats[c.Phone]} անգամ" : "")</div></div>
+        <form method="post" asp-page-handler="Done" class="d-flex gap-1">
+            <input type="hidden" name="id" value="@c.Id" />
+            <input name="notes" class="form-control form-control-sm" placeholder="Արդյունք" />
+            <button class="btn btn-sm btn-success text-nowrap">Հետզանգել եմ</button>
+        </form>
+    </div>
+}
+</div>
+@if (!Model.Open.Any()) { <p class="text-muted">Բոլոր զանգերին պատասխանված է 👍</p> }
+
+<details class="card card-body">
+    <summary class="fw-semibold">Վերջին պատասխանվածները</summary>
+    @foreach (var c in Model.Done)
+    {
+        <div class="small border-bottom py-1">@Phone.Display(c.Phone) · @c.CalledAt.ToString("dd.MM HH:mm") → @c.CalledBackAt?.ToString("HH:mm") @c.HandledBy?.FullName @c.Notes</div>
+    }
+</details>
+<p class="small text-muted mt-3">Vivacell / PBX ինտեգրացիա․ զանգերը կարող են ավտոմատ գալ <code>POST /api/missed-calls</code> հասցեով (header <code>X-Api-Key</code>, JSON <code>{"phone":"...","calledAt":"..."}</code>)։ Պայմանները ճշտել Vivacell-ի հետ։</p>

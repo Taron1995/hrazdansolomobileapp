@@ -1,0 +1,40 @@
+@page
+@model UGeekStore.Pages.Customers.IndexModel
+@{ ViewData["Title"] = "CRM · Հաճախորդներ"; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Հաճախորդների բազա</h1>
+    <a class="btn btn-brand" href="/Customers/Edit">+ Նոր հաճախորդ</a>
+</div>
+<form method="get" class="d-flex gap-2 mb-3">
+    <input name="q" value="@Model.Q" class="form-control" placeholder="Անուն / հեռախոս / հասցե" />
+    <select name="district" class="form-select" style="max-width:12rem" onchange="this.form.submit()">
+        <option value="">Բոլոր թաղամասերը</option>
+        @foreach (var d in Model.DistrictStats) { <option selected="@(d.District == Model.District)">@d.District</option> }
+    </select>
+    <button class="btn btn-outline-dark">Փնտրել</button>
+</form>
+
+<details class="card card-body mb-3" open="@(Model.Q == null)">
+    <summary class="fw-semibold">Պատվերների քարտեզ ըստ թաղամասերի (վերջին 90 օր)</summary>
+    <p class="small text-muted mt-2 mb-2">Օգնում է հասկանալ ծանրաբեռնված հատվածները և պլանավորել առաքումները։</p>
+    @{ var max = Model.DistrictStats.Select(d => d.Orders).DefaultIfEmpty(1).Max(); }
+    @foreach (var d in Model.DistrictStats)
+    {
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <div style="width:9rem" class="small text-truncate">@d.District</div>
+            <div class="flex-fill bg-light rounded" style="height:14px"><div class="rounded" style="height:14px;background:var(--brand);width:@(max == 0 ? 0 : d.Orders * 100 / max)%"></div></div>
+            <div class="small" style="width:7rem">@d.Orders պատվեր · @d.Customers հաճ.</div>
+        </div>
+    }
+</details>
+
+<div class="list-group">
+@foreach (var c in Model.Customers)
+{
+    <a class="list-group-item list-group-item-action" href="/Customers/Edit/@c.Id">
+        <div class="d-flex justify-content-between"><b>@c.Name</b><span class="small">@Phone.Display(c.Phone)</span></div>
+        <div class="small text-muted">@c.District @c.Address · @c.Orders.Count պատվեր
+            @if (c.Issues.Any(i => !i.Resolved)) { <span class="text-danger">· ⚠ @c.Issues.Count(i => !i.Resolved) խնդիր</span> }</div>
+    </a>
+}
+</div>

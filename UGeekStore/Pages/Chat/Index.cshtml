@@ -1,0 +1,49 @@
+@page
+@model UGeekStore.Pages.Chat.IndexModel
+@{ ViewData["Title"] = "Ընդհանուր չատ"; var me = User.EmployeeId(); }
+<h1 class="h5 mb-2">Ընդհանուր չատ</h1>
+<div class="chat-box mb-2" id="box">
+@foreach (var m in Model.Messages)
+{
+    <div class="chat-msg @(m.EmployeeId == me ? "mine" : "")">
+        <div class="chat-meta">@m.SenderName · @m.SentAt.ToString("dd.MM HH:mm")</div>
+        <div class="bubble">@m.Text</div>
+    </div>
+}
+</div>
+<form id="chatForm" class="d-flex gap-2">
+    <input id="msg" class="form-control" placeholder="Հաղորդագրություն..." autocomplete="off" maxlength="2000" />
+    <button class="btn btn-brand">Ուղարկել</button>
+</form>
+<div id="status" class="small text-muted mt-1"></div>
+@section Scripts {
+<script src="/lib/signalr/signalr.min.js"></script>
+<script>
+(function () {
+    const me = @me;
+    const box = document.getElementById('box');
+    const status = document.getElementById('status');
+    box.scrollTop = box.scrollHeight;
+    function add(m) {
+        const d = document.createElement('div');
+        d.className = 'chat-msg' + (m.employeeId === me ? ' mine' : '');
+        const meta = document.createElement('div'); meta.className = 'chat-meta'; meta.textContent = `${m.senderName} · ${m.sentAt}`;
+        const b = document.createElement('div'); b.className = 'bubble'; b.textContent = m.text;
+        d.append(meta, b); box.appendChild(d); box.scrollTop = box.scrollHeight;
+        if (m.employeeId !== me && document.hidden && 'Notification' in window && Notification.permission === 'granted')
+            new Notification(m.senderName, { body: m.text });
+    }
+    const conn = new signalR.HubConnectionBuilder().withUrl('/hubs/chat').withAutomaticReconnect().build();
+    conn.on('message', add);
+    conn.onreconnecting(() => status.textContent = 'Կապը վերականգնվում է...');
+    conn.onreconnected(() => status.textContent = '');
+    conn.start().catch(() => status.textContent = 'Կապ չկա');
+    document.getElementById('chatForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const i = document.getElementById('msg'); const t = i.value.trim(); if (!t) return;
+        conn.invoke('Send', t).then(() => i.value = '').catch(() => status.textContent = 'Չհաջողվեց ուղարկել');
+    });
+    if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+})();
+</script>
+}

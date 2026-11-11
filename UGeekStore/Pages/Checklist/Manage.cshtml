@@ -1,0 +1,57 @@
+@page
+@model UGeekStore.Pages.Checklist.ManageModel
+@{ ViewData["Title"] = "Չեկլիստի կառավարում"; }
+<h1 class="h4 mb-3">Չեկլիստի կառավարում</h1>
+
+<div class="card card-body mb-3">
+    <h2 class="h6">Հաշվետվություններ</h2>
+    <form method="get" class="d-flex gap-2 mb-2">
+        <input type="date" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" class="form-control" style="max-width:12rem" onchange="this.form.submit()" />
+    </form>
+    @foreach (var e in Model.Entries)
+    {
+        <div class="border-bottom py-2">
+            <div><b>@e.ChecklistItem?.Title</b> · @e.Employee?.FullName · @e.CompletedAt.ToString("HH:mm")</div>
+            @if (e.Comment != null) { <div class="small">@e.Comment</div> }
+            @if (e.ReportFilePath != null)
+            {
+                if (FileStorage.IsVideo(e.ReportFilePath)) { <video src="@e.ReportFilePath" controls preload="metadata" style="max-width:100%;max-height:260px"></video> }
+                else { <a href="@e.ReportFilePath" target="_blank"><img src="@e.ReportFilePath" style="max-height:160px" class="rounded" alt="" /></a> }
+            }
+        </div>
+    }
+    @if (!Model.Entries.Any()) { <p class="text-muted mb-0">Գրառումներ չկան</p> }
+</div>
+
+<div class="card card-body mb-3">
+    <h2 class="h6">Կետեր</h2>
+    <div class="table-responsive">
+    <table class="table table-sm">
+        <thead><tr><th>Կետ</th><th>Դեր</th><th>Հաճախ.</th><th>📷</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var i in Model.Items)
+        {
+            <tr class="@(i.IsActive ? "" : "text-muted")">
+                <td>@i.Title</td><td>@(i.Role?.Hy() ?? "Բոլորը")</td><td>@i.Frequency.Hy()</td><td>@(i.RequiresMediaReport ? "✓" : "")</td>
+                <td><form method="post" asp-page-handler="Toggle"><input type="hidden" name="id" value="@i.Id" />
+                    <button class="btn btn-sm btn-link p-0">@(i.IsActive ? "Անջատել" : "Միացնել")</button></form></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+    <form method="post" asp-page-handler="Add" class="row g-2">
+        <div class="col-12 col-md-4"><input name="title" class="form-control" placeholder="Նոր կետ" required /></div>
+        <div class="col-6 col-md-2"><select name="role" class="form-select"><option value="">Բոլորը</option>
+            @foreach (var r in Enum.GetValues<UserRole>()) { <option value="@r">@r.Hy()</option> }</select></div>
+        <div class="col-6 col-md-2"><select name="frequency" class="form-select">
+            @foreach (var f in Enum.GetValues<ChecklistFrequency>()) { <option value="@f">@f.Hy()</option> }</select></div>
+        <div class="col-6 col-md-2 d-flex align-items-center"><label class="small"><input type="checkbox" name="media" value="true" /> Նկար/վիդեո</label></div>
+        <div class="col-6 col-md-2"><button class="btn btn-outline-dark w-100">Ավելացնել</button></div>
+    </form>
+    <form method="post" asp-page-handler="Import" enctype="multipart/form-data" class="mt-3 d-flex gap-2 align-items-center">
+        <input type="file" name="csv" accept=".csv,text/csv" class="form-control" required />
+        <button class="btn btn-outline-secondary text-nowrap">Ներմուծել CSV (Google Sheet)</button>
+    </form>
+    <div class="small text-muted mt-1">CSV սյունակներ՝ Կետ, Դեր (Cashier/Manager/Confectioner/Courier կամ դատարկ), Daily/Weekly, Նկար (1/0)</div>
+</div>

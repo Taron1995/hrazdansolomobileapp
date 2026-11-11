@@ -1,0 +1,61 @@
+@page
+@model UGeekStore.Pages.Smm.IndexModel
+@{ ViewData["Title"] = "Marketing / SMM"; }
+<h1 class="h4 mb-3">Marketing / SMM պլանավորում</h1>
+<form method="get" class="d-flex gap-2 mb-3">
+    <a class="btn btn-outline-dark" href="?month=@Model.Month.AddMonths(-1).ToString("yyyy-MM")">‹</a>
+    <input type="month" name="month" value="@Model.Month.ToString("yyyy-MM")" class="form-control" style="max-width:12rem" onchange="this.form.submit()" />
+    <a class="btn btn-outline-dark" href="?month=@Model.Month.AddMonths(1).ToString("yyyy-MM")">›</a>
+</form>
+
+<div class="row g-2 mb-3 text-center">
+    @foreach (var s in Enum.GetValues<SmmStatus>())
+    {
+        <div class="col-3"><div class="card card-body p-2"><div class="small text-muted">@s.Hy()</div><div class="fw-semibold">@Model.Posts.Count(p => p.Status == s)</div></div></div>
+    }
+</div>
+
+<div class="list-group mb-3">
+@foreach (var p in Model.Posts)
+{
+    <div class="list-group-item">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+            <div><b>@p.PlannedDate.ToString("dd.MM ddd", new System.Globalization.CultureInfo("hy-AM"))</b> · @p.Platform @(p.ContentType != null ? "· " + p.ContentType : "")
+                <div>@p.Topic</div>
+                @if (p.Caption != null) { <div class="small text-muted" style="white-space:pre-wrap">@p.Caption</div> }
+                <div class="small text-muted">@p.Responsible?.FullName @p.Notes</div></div>
+            <form method="post" asp-page-handler="Status" class="d-flex gap-1 align-items-start">
+                <input type="hidden" name="id" value="@p.Id" /><input type="hidden" name="month" value="@Model.Month.ToString("yyyy-MM")" />
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    @foreach (var s in Enum.GetValues<SmmStatus>()) { <option value="@s" selected="@(p.Status == s)">@s.Hy()</option> }
+                </select>
+                <button name="delete" value="true" class="btn btn-sm btn-outline-danger" onclick="return confirm('Ջնջե՞լ')">✕</button>
+            </form>
+        </div>
+    </div>
+}
+</div>
+@if (!Model.Posts.Any()) { <p class="text-muted">Այս ամսվա համար պլան չկա</p> }
+
+<form method="post" asp-page-handler="Add" class="card card-body mb-3">
+    <h2 class="h6">Նոր գրառում</h2>
+    <div class="row g-2">
+        <div class="col-6 col-md-2"><input type="date" name="plannedDate" class="form-control" required value="@Model.Month.ToString("yyyy-MM-dd")" /></div>
+        <div class="col-6 col-md-2"><select name="platform" class="form-select">
+            @foreach (var pl in IndexModel.Platforms) { <option>@pl</option> }</select></div>
+        <div class="col-6 col-md-2"><select name="contentType" class="form-select">
+            <option>Post</option><option>Reels</option><option>Story</option><option>Video</option><option>Ads</option></select></div>
+        <div class="col-6 col-md-2"><select name="responsibleId" class="form-select"><option value="">Պատասխանատու</option>
+            @foreach (var e in Model.Employees) { <option value="@e.Id">@e.FullName</option> }</select></div>
+        <div class="col-12 col-md-4"><input name="topic" class="form-control" placeholder="Թեմա" required /></div>
+        <div class="col-12"><textarea name="caption" class="form-control" rows="2" placeholder="Տեքստ / caption"></textarea></div>
+        <div class="col-12 col-md-3"><button class="btn btn-brand w-100">Ավելացնել</button></div>
+    </div>
+</form>
+
+<form method="post" asp-page-handler="Import" enctype="multipart/form-data" class="card card-body">
+    <h2 class="h6">Ներմուծել Google Sheet-ից (CSV)</h2>
+    <div class="d-flex gap-2"><input type="file" name="csv" accept=".csv,text/csv" class="form-control" required />
+        <button class="btn btn-outline-secondary text-nowrap">Ներմուծել</button></div>
+    <div class="small text-muted mt-1">Սյունակներ՝ Ամսաթիվ (dd.MM.yyyy կամ yyyy-MM-dd), Հարթակ, Թեմա, Տեսակ, Տեքստ, Կարգավիճակ</div>
+</form>

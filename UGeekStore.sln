@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29215.179
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UGeekStore", "UGeekStore\UGeekStore.csproj", "{7E41E320-F700-4BC2-B913-39D40A60F186}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UGeekStore.Core", "UGeekStore.Core\UGeekStore.Core.csproj", "{0CC991E5-EEA2-4E65-AEE7-BAB9310426ED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7E41E320-F700-4BC2-B913-39D40A60F186}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E41E320-F700-4BC2-B913-39D40A60F186}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E41E320-F700-4BC2-B913-39D40A60F186}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E41E320-F700-4BC2-B913-39D40A60F186}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CC991E5-EEA2-4E65-AEE7-BAB9310426ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CC991E5-EEA2-4E65-AEE7-BAB9310426ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CC991E5-EEA2-4E65-AEE7-BAB9310426ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CC991E5-EEA2-4E65-AEE7-BAB9310426ED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4F0035D-F811-43D0-ADBF-A40DF64B7CFE}
+	EndGlobalSection
+EndGlobal

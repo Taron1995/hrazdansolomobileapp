@@ -1,0 +1,25 @@
+@page "{id:int?}"
+@model UGeekStore.Pages.Products.EditModel
+@{ ViewData["Title"] = Model.Id == null ? "Նոր ապրանք" : "Խմբագրել ապրանքը"; }
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<form method="post" enctype="multipart/form-data" class="card card-body" style="max-width:40rem">
+    <div asp-validation-summary="All" class="text-danger small"></div>
+    <div class="mb-2"><label class="form-label">Անվանում *</label><input asp-for="Name" class="form-control" required /></div>
+    <div class="mb-2"><label class="form-label">Կատեգորիա</label><input asp-for="Category" class="form-control" placeholder="Տորթ, թխվածք..." /></div>
+    <div class="mb-2"><label class="form-label">Գին (֏) *</label><input asp-for="Price" type="number" min="0" class="form-control" required /></div>
+    <div class="mb-2"><label class="form-label">Նկարագրություն</label><textarea asp-for="Description" class="form-control" rows="2"></textarea></div>
+    <div class="mb-2">
+        <label class="form-label">Նկար</label>
+        @if (Model.PhotoPath != null) { <div class="mb-2"><img src="@Model.PhotoPath" style="max-height:160px" class="rounded" alt="" /></div> }
+        <input type="file" name="photo" accept="image/*" capture="environment" class="form-control" />
+    </div>
+    <div class="form-check mb-2"><input asp-for="IsActive" class="form-check-input" /><label class="form-check-label" asp-for="IsActive">Ակտիվ (վաճառքում)</label></div>
+    @if (Model.Id == null)
+    {
+        <div class="form-check mb-3"><input asp-for="NotifyAfterSave" class="form-check-input" /><label class="form-check-label" asp-for="NotifyAfterSave">Պահպանելուց հետո ծանուցել հաճախորդներին</label></div>
+    }
+    <div class="d-flex gap-2">
+        <button class="btn btn-brand flex-fill">Պահպանել</button>
+        <a class="btn btn-outline-secondary flex-fill" href="/Products">Չեղարկել</a>
+    </div>
+</form>

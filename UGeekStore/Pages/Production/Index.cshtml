@@ -1,0 +1,53 @@
+@page
+@model UGeekStore.Pages.Production.IndexModel
+@{ ViewData["Title"] = "Արտադրության պլան"; }
+<h1 class="h4 mb-3">Արտադրության պլանավորում</h1>
+<form method="get" class="d-flex gap-2 mb-3">
+    <a class="btn btn-outline-dark" href="?date=@Model.Date.AddDays(-1).ToString("yyyy-MM-dd")">‹</a>
+    <input type="date" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" />
+    <a class="btn btn-outline-dark" href="?date=@Model.Date.AddDays(1).ToString("yyyy-MM-dd")">›</a>
+</form>
+
+<div class="card card-body mb-3">
+    <h2 class="h6">Ծանրաբեռնվածություն առաջիկա 7 օրերին (պատվերների քանակ)</h2>
+    <div class="table-responsive">
+    <table class="table table-sm text-center mb-0">
+        <thead><tr><th class="text-start">Կատարող</th>@foreach (var d in Model.Days) { <th>@d.ToString("dd.MM")</th> }</tr></thead>
+        <tbody>
+        @foreach (var row in Model.Matrix)
+        {
+            <tr><td class="text-start">@row.Key</td>
+            @foreach (var d in Model.Days)
+            {
+                var n = row.Value.GetValueOrDefault(d);
+                <td class="load-@(n == 0 ? 0 : n <= 3 ? 1 : n <= 6 ? 2 : 3)">@(n == 0 ? "·" : n)</td>
+            }</tr>
+        }
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="card card-body mb-3">
+    <h2 class="h6">@Model.Date.ToString("dd.MM.yyyy") — ընդհանուր պատրաստելու ցանկ</h2>
+    @if (!Model.Totals.Any()) { <p class="text-muted mb-0">Պատվերներ չկան</p> }
+    <ul class="mb-0">@foreach (var t in Model.Totals) { <li>@t.Name — <b>@t.Qty.ToString("0.#")</b></li> }</ul>
+</div>
+
+@foreach (var g in Model.Groups)
+{
+    <div class="card mb-3">
+        <div class="card-header bg-white fw-semibold">@g.Key (@g.Count())</div>
+        <div class="list-group list-group-flush">
+        @foreach (var o in g.OrderBy(o => o.DueAt))
+        {
+            <a class="list-group-item list-group-item-action" href="/Orders/Details/@o.Id">
+                <div class="d-flex justify-content-between"><span><b>@o.DueAt.ToString("HH:mm")</b> · #@o.Id · @o.Customer?.Name</span>
+                    <span class="badge @UGeekStore.Pages.Orders.IndexModel.Badge(o.Status)">@o.Status.Hy()</span></div>
+                <div class="small">@string.Join(", ", o.Items.Select(i => $"{i.Name} × {i.Quantity:0.#}"))</div>
+                @if (!string.IsNullOrEmpty(o.Description)) { <div class="small text-muted">@o.Description</div> }
+            </a>
+        }
+        </div>
+    </div>
+}
