@@ -20,6 +20,12 @@ public class CashService
     public CashService(AppDbContext db, Clock clock, GoogleSheetsService sheets, IConfiguration cfg)
     { _db = db; _clock = clock; _sheets = sheets; _cfg = cfg; }
 
+    private static readonly object?[] CashHeader =
+        { "Ամսաթիվ", "Ժամ", "Դրամարկղ", "Գործարքի տեսակ", "Տեսակ", "Տարբերակ", "Գումար", "Մեկնաբանություն", "Գանձապահ", "Հեռախոսի ժամ" };
+
+    private static readonly object?[] ClosingHeader =
+        { "Ամսաթիվ", "Դրամարկղ", "1000", "2000", "5000", "10000", "20000", "50000", "Ընդհանուր (հաշված)", "Մուտք", "Ելք", "Պարտք", "Փակող", "Ժամ", "Մեկնաբանություն" };
+
     public Task<List<CashRegister>> RegistersAsync() =>
         _db.CashRegisters.Where(r => r.IsActive).OrderBy(r => r.Id).ToListAsync();
 
@@ -61,7 +67,7 @@ public class CashService
         await _db.SaveChangesAsync();
 
         var register = await _db.CashRegisters.FindAsync(shift.CashRegisterId);
-        tx.SyncedToSheet = await _sheets.AppendAsync(_cfg["GoogleSheets:CashSheet"] ?? "Cash",
+        tx.SyncedToSheet = await _sheets.AppendAsync(_cfg["GoogleSheets:CashSheet"] ?? "Cash", CashHeader,
             shift.Date.ToString("dd.MM.yyyy"), tx.CreatedAt.ToString("HH:mm:ss"), register?.Name,
             "Կանխիկի շարժ", tx.Type.Hy(), tx.Category, tx.Amount, tx.Comment, tx.CashierName,
             tx.DeviceTime?.ToString("dd.MM.yyyy HH:mm:ss"));
@@ -85,6 +91,6 @@ public class CashService
         var row = new List<object?> { shift.Date.ToString("dd.MM.yyyy"), register?.Name };
         row.AddRange(counts.Cast<object?>());
         row.AddRange(new object?[] { shift.CountedTotal, t.Income, t.Expense, t.Debt, closer?.FullName, shift.ClosedAt?.ToString("HH:mm"), comment });
-        await _sheets.AppendAsync(_cfg["GoogleSheets:ClosingSheet"] ?? "Closing", row.ToArray());
+        await _sheets.AppendAsync(_cfg["GoogleSheets:ClosingSheet"] ?? "Closing", ClosingHeader, row.ToArray());
     }
 }
